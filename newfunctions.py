@@ -21,6 +21,8 @@ def count_bytes(opcode):
 
 
 def print_values():
+    print()
+    print()
     print(f"{'MEMORY':<10} {'VALUE':<6}")
     for address, value in memory.items():
         print(f"{address:<10} {value:<6}")
@@ -42,12 +44,13 @@ def print_values():
 def mov(data):
     if data['operand2'] == 'M':
         address = str(registers['H']) + str(registers['L'])
-        registers[data['operand1']] = memory[int(address)]
+        registers[data['operand1']] = hex(int(memory[int(address)]))
     else:
         registers[data['operand1']] = registers[data['operand2']]
 
 
 def mvi(data):
+    print(data['value'])
     registers[data['operand1']] = data['value']
 
 
@@ -97,7 +100,7 @@ def add(data):
         print(address)
         a = int(memory[int(address)]) + int(str(registers['A']), 16)
     else:
-        a = int(registers['A'], 16) + int(registers[data['operand1']], 16)
+        a = int(str(registers['A']), 16) + int(registers[data['operand1']], 16)
     registers['A'] = hex(a)
     if a > 255:
         flags['CY'] = 1
@@ -130,7 +133,6 @@ def dcr(data):
 
 
 def inx(data):
-    print(registers[data['register2']], registers[data['register1']], "dfsdffsdf")
     x = str(int(registers[data['register2']]) + 1)
     registers[data['register2']] = '{:02d}'.format(int(x))
     # registers[data['register1']] = str(int(registers[data['register1']]) + 1)

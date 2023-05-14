@@ -1,5 +1,9 @@
-mvi a, ff
-mvi b, ff
-jnc : 2007
-out 1001
-out 1002
+mvi c, 05
+mvi a, 00
+lxi h, 1000
+mov b, m
+add b
+inx h
+dcr c
+jnz : 2007
+out 1004

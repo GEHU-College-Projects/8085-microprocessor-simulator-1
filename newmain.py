@@ -1,6 +1,7 @@
 from newfunctions import *
 import sys
 
+
 class Simulator:
     def __init__(self):
         self.pc = 0
@@ -37,7 +38,7 @@ class Simulator:
             'jnz': jnz,
             'set': set,
             'out': out,
-            'jnc' : jnc,
+            'jnc': jnc,
         }
         self.register_pairs = {'B': ('B', 'C'), 'D': ('D', 'E'), 'H': ('H', 'L')}
 
@@ -71,6 +72,10 @@ class Simulator:
             elif code_list[2].isalpha():
                 self.operand1, self.operand2 = code_list[1][:-1], code_list[2]
 
+        if self.value!=None:
+
+            self.value = hex(int(self.value)) if self.value.isdigit() else hex(int(self.value, 16))
+
 
         data = {
             'opcode': self.opcode,
@@ -78,16 +83,15 @@ class Simulator:
             'operand2': self.operand2,
             'register1': self.register1,
             'register2': self.register2,
-            'value': hex(int(self.value, 16)) if self.value else None,
+            'value': self.value,
             'address': int(self.address) if self.address else None,
             'label': int(self.label) if self.label else None,
-            'last_used_register': self.last_used_register if self.last_used_register=='M' or self.last_used_register else 'A'
+            'last_used_register': self.last_used_register if self.last_used_register == 'M' or self.last_used_register else 'A'
 
         }
 
         # setting last used register for jump commands
-        if self.operand1 and self.operand1!="M":
-            print("setting last used register", self.operand1)
+        if self.operand1 and self.operand1 != "M":
             self.last_used_register = self.operand1
         self.run_instruction(data)
         self.reset_values()
@@ -102,7 +106,8 @@ class Simulator:
         self.address = None
         self.label = None
 
-    def set_flags(self, value):
+    def set_flags(self):
+        value = int(str(registers[self.last_used_register]), 16)
         if value == 0:
             flags['Z'] = 1
         elif value < 0:
@@ -113,34 +118,32 @@ class Simulator:
 
     def run_instruction(self, data):
         opcode = data['opcode'].lower()
-        if opcode in self.function_dict:
-            if opcode not in ['jc', 'jnc', 'jz', 'jnz', 'jmp']:
-                self.function_dict[opcode](data)
-            elif opcode in ['jc', 'jnc', 'jz', 'jnz', 'jmp']:
-                # set flags for last used register
-                self.set_flags(int(str(registers[data['last_used_register']]), 16))
-                if flags['Z'] == 0 and opcode == 'jnz':
-                    address = data['address']
-                    self.execute(address, last_address)
-                elif flags['CY']==0 and opcode == 'jnc':
-                    address = data['address']
-                    self.execute(address, last_address)
-                    if address == last_address:
-                        sys.exit()
-                else :
-                     print(data)
-        else:
-            print("Invalid Instruction")
+        self.function_dict[opcode](data)
 
     def execute(self, start_address, last_address):
-        print(start_address, last_address)
         while start_address <= last_address:
             # self.decode(memory[self.pc])
-            self.decode(memory[start_address])
-            start_address += count_bytes(memory[start_address])
+            instruction = memory[start_address]
+            opcode = instruction.split()[0].lower()
+            if opcode not in ['jc', 'jnc', 'jz', 'jnz', 'jmp']:
+                self.decode(instruction)
+                start_address += count_bytes(memory[start_address])
+            elif opcode in ['jc', 'jnc', 'jz', 'jnz', 'jmp']:
+                # set flags for last used register
+                self.set_flags()
+                if flags['Z'] == 0 and opcode == 'jnz':
+                    start_address = int(instruction.split()[2])
+                elif flags['CY'] == 0 and opcode == 'jnc':
+                    start_address = int(instruction.split()[2])
+                elif flags['Z'] == 1 and opcode == 'jz':
+                    start_address = int(instruction.split()[2])
+                elif flags['CY'] == 1 and opcode == 'jc':
+                    start_address = int(instruction.split()[2])
+                elif opcode == 'jmp':
+                    start_address = int(instruction.split()[1])
 
-
-
+                else:
+                    start_address += count_bytes(memory[start_address])
 
     # read_code_lines -> execute -> decode -> run_instruction
     def read_code_lines(self):
@@ -159,7 +162,6 @@ class Simulator:
                 self.pc += count_bytes(opcode)
         self.execute(initial_address, last_address)
         print_values()
-
 
     def set_memory(self):
         with open("setmemory.txt", 'r') as file:

@@ -92,8 +92,14 @@ class Simulator:
         self.label = None
 
     def run_instruction(self, data):
-        if data['opcode'].lower() in self.function_dict:
-            self.function_dict[data['opcode'].lower()](data)
+        opcode = data['opcode'].lower()
+        if opcode in self.function_dict:
+            if opcode not in ['jc', 'jnc', 'jz', 'jnz', 'jmp']:
+                self.function_dict[opcode](data)
+            elif opcode in ['jc', 'jnc', 'jz', 'jnz', 'jmp']:
+                if flags['carry'] and opcode == 'jc':
+                    self.pc = data['address']
+
         else:
             print("Invalid Instruction")
 
@@ -108,6 +114,7 @@ class Simulator:
     def read_code_lines(self):
         self.set_memory()
         self.pc = 2000
+        global  last_address
         initial_address = self.pc
         last_address = self.pc
         with open("code.txt", 'r') as file:

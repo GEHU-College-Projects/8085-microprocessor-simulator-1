@@ -33,7 +33,7 @@ class Simulator:
             'cmp': cmp,
             'set': set,
             'out': out,
-            # 'hlt': hlt,
+            # 'hlt': hlt,mhvhj
         }
 
     def decode(self, instruction):
@@ -41,31 +41,27 @@ class Simulator:
         if len(parts) == 2:
             self.opcode = parts[0]
             second = parts[1]
-            if len(second) == 1:
-                self.dest_reg = second
-            elif len(second) == 2:
-                self.value = second
-            elif len(second) == 4:
-                self.address = second
+        if len(second) == 1:
+            self.dest_reg = second
+        elif len(second) == 2:
+            self.value = second
+        elif len(second) == 4:
+            self.address = second
         elif len(parts) == 3:
             self.opcode = parts[0]
             self.dest_reg = parts[1][:-1]
             self.src_reg_or_value = parts[2]
-            if parts[1] == ":":
-                self.opcode = parts[0]
-                self.address = parts[2]
-            elif len(self.dest_reg) == 4:
-                self.address = self.dest_reg
-                self.dest_reg = None
-            elif self.src_reg_or_value.isdigit():
-                self.value = int(self.src_reg_or_value)
-            elif self.src_reg_or_value.startswith(":"):
-                self.label = self.src_reg_or_value[1:]
-            else:
-                if len(self.src_reg_or_value) == 1:
-                    self.src_reg = self.src_reg_or_value
-                else:
-                    self.value = self.src_reg_or_value
+        if parts[1] == ":":
+            self.opcode = parts[0]
+            self.address = parts[2]
+        elif len(self.dest_reg) == 4:
+            self.address = self.dest_reg
+            self.dest_reg = None
+        elif self.src_reg_or_value.isdigit():
+            self.value = int(self.src_reg_or_value)
+        elif self.src_reg_or_value.startswith(":"):
+            self.label = self.src_reg_or_value[1:]
+
         elif len(parts) == 4:
             self.opcode = parts[0]
             self.dest_reg = parts[1]
@@ -89,9 +85,13 @@ class Simulator:
             self.dest_reg = self.dest_reg.upper()
             if int(registers[register_values['C']]) != 0:
                 flags[flag_values['Z']] = 0
-            if int(registers[register_values['C']]-1 )== 0:
+            if int(registers[register_values['C']] - 1) == 0:
                 flags[flag_values['Z']] = 1
-
+        else:
+            if len(self.src_reg_or_value) == 1:
+                self.src_reg = self.src_reg_or_value
+            else:
+                self.value = self.src_reg_or_value
 
         if self.src_reg is not None:
             self.src_reg = self.src_reg.upper()
@@ -115,7 +115,7 @@ class Simulator:
         print("Flags: ", flags)
 
     def storeCodeAtAddress(self, address):
-        self.remove_empty_lines()
+        # self.remove_empty_lines()
         initial_address = address
         with open('code.txt', 'r') as file:
             for instruction in file:
@@ -131,29 +131,8 @@ class Simulator:
             instruction = memory[int(address)]
             print(instruction, "inddddddd")
             opcode = instruction.split()[0]
+            address=count_bytes(instruction)
             print(opcode)
-
-            if opcode.upper() not in ['JMP', 'JC', 'JNC', 'JZ', 'JNZ']:
-                self.decode(instruction)
-                address += count_bytes(instruction)
-            if flags[flag_values['Z']] == 1:
-                print("Halting")
-                self.printState()
-                exit(0)
-            elif opcode.upper() == "JNC" and flags[flag_values['C']] == 0:
-                address = int(instruction.split()[2])
-            elif opcode.upper() == "JNZ" and flags[flag_values['Z']] == 0:
-                address = int(instruction.split()[2])
-            elif opcode.upper() == "JC" and flags[flag_values['C']] == 1:
-                address = int(instruction.split()[2])
-            elif opcode.upper() == "JZ" and flags[flag_values['Z']] == 1:
-                address = int(instruction.split()[2])
-            elif opcode.upper() == "JMP":
-                address = int(instruction.split()[1])
-            elif opcode.upper() == "JNZ" and flags[flag_values['Z']] == 0:
-                self.decode(instruction)
-                address += count_bytes(instruction)
-            # address += count_bytes(instruction)
 
 
 
@@ -178,20 +157,23 @@ class Simulator:
     def saveTextToFile(self, text):
         with open('code.txt', 'w') as file:
             print(text)
-            file.write(text)
+            if text!='\n':
+                file.write(text)
 
     def get_text_from_file(self):
         with open('code.txt', 'r') as file:
             return file.read()
 
     def remove_empty_lines(self):
-        lines=''
+        lines = ''
         with open('code.txt', 'r') as file:
             lines = file.readlines()
             lines = [line.strip() for line in lines if len(line.strip()) > 1]
         with open('code.txt', 'w') as file:
             for line in lines:
-                file.write(line+'\n')
+                file.write(line + '\n')
+
+
 # main
 
 if __name__ == '__main__':

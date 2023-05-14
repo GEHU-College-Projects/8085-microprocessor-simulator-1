@@ -21,7 +21,10 @@ def convert_to_hex_print():
         if int(temp_registers[i]) > 99:
             temp_registers[i] = hex(int(temp_registers[i]))[2:].upper()
     # print value of registers
-    print("A: " + str(temp_registers[0]) + " B: " + str(temp_registers[1]) + " C: " + str(temp_registers[2]) + " D: " + str(temp_registers[3]) + " E: " + str(temp_registers[4]) + " H: " + str(temp_registers[5]) + " L: " + str(temp_registers[6]) + " M: " + str(temp_registers[7]))
+    print("A: " + str(temp_registers[0]) + " B: " + str(temp_registers[1]) + " C: " + str(
+        temp_registers[2]) + " D: " + str(temp_registers[3]) + " E: " + str(temp_registers[4]) + " H: " + str(
+        temp_registers[5]) + " L: " + str(temp_registers[6]) + " M: " + str(temp_registers[7]))
+
 
 def get_hex_register_value(registers):
     temp_registers = registers.copy()
@@ -36,9 +39,14 @@ def get_hex_register_value(registers):
     return temp_registers
 
 
+def printState():
+    print("Registers: ", end='')
+    convert_to_hex_print()
+    print("Flags: ", flags)
 
-def count_bytes(instruction):
-    opcode = instruction.upper().split()[0]
+
+def count_bytes(opcode):
+    opcode = opcode.upper().split()[0]
     if opcode == 'LXI':
         return 3
     elif opcode in ['STA', 'LDA', 'SHLD', 'LHLD', 'JMP', 'JC', 'JNC', 'JP', 'JM', 'JZ', 'JNZ']:
@@ -57,25 +65,27 @@ def count_bytes(instruction):
 
 
 def mov(data):
-    if data['src_reg'] == 'M':
+    if data['operand2'] == 'M':
         address = str(registers[register_values['H']]) + str(registers[register_values['L']])
-        registers[register_values[data['dest_reg']]] = memory[int(address)]
+        registers[register_values[data['operand1']]] = memory[int(address)]
         return
-    registers[register_values[data['dest_reg']]] = registers[register_values[data['src_reg']]]
+    registers[register_values[data['operand1']]] = registers[register_values[data['operand2']]]
+
+
 def mvi(data):
-    registers[register_values[data['dest_reg']]] = data['value']
+    registers[register_values[data['operand1']]] = data['value']
 
 
 def lxi(data):
     data['value'] = str(data['value'])
     data['value'] = [data['value'][:2], data['value'][2:]]
-    if data['dest_reg'] == 'H':
+    if data['operand1'] == 'H':
         registers[register_values['H']] = data['value'][0]
         registers[register_values['L']] = data['value'][1]
-    elif data['dest_reg'] == 'B':
+    elif data['operand1'] == 'B':
         registers[register_values['B']] = data['value'][0]
         registers[register_values['C']] = data['value'][1]
-    elif data['dest_reg'] == 'D':
+    elif data['operand1'] == 'D':
         registers[register_values['D']] = data['value'][0]
         registers[register_values['E']] = data['value'][1]
 
@@ -99,9 +109,9 @@ def shld(data):
 
 
 def stax(data):
-    if data['dest_reg'] == 'B':
+    if data['operand1'] == 'B':
         memory[registers[register_values['B']] + registers[register_values['C']]] = registers[register_values['A']]
-    elif data['dest_reg'] == 'D':
+    elif data['operand1'] == 'D':
         memory[registers[register_values['D']] + registers[register_values['E']]] = registers[register_values['A']]
 
 
@@ -113,7 +123,8 @@ def xchg(data):
 
 
 def add(data):
-    registers[register_values['A']] = int(registers[register_values['A']]) + int(registers[register_values[data['dest_reg']]])
+    registers[register_values['A']] = int(registers[register_values['A']]) + int(
+        registers[register_values[data['operand1']]])
 
 
 def adi(data):
@@ -124,59 +135,59 @@ def adi(data):
 
 
 def sub(data):
-    registers[register_values['A']] -= registers[register_values[data['src_reg']]]
+    registers[register_values['A']] -= registers[register_values[data['operand2']]]
 
 
 def inr(data):
-    registers[register_values[data['dest_reg']]] += 1
+    registers[register_values[data['operand1']]] += 1
 
 
 def dcr(data):
-    registers[register_values[data['dest_reg']]] -= 1
+    registers[register_values[data['operand1']]] -= 1
 
 
 def inx(data):
-    if data['dest_reg'] == 'B':
-        registers[register_values['C']] = int(registers[register_values['C']])+1
+    if data['operand1'] == 'B':
+        registers[register_values['C']] = int(registers[register_values['C']]) + 1
         if registers[register_values['C']] == 0:
-            registers[register_values['B']] = int(registers[register_values['B']])+1
-    elif data['dest_reg'] == 'D':
-        registers[register_values['E']] = int(registers[register_values['E']])+1
+            registers[register_values['B']] = int(registers[register_values['B']]) + 1
+    elif data['operand1'] == 'D':
+        registers[register_values['E']] = int(registers[register_values['E']]) + 1
         if registers[register_values['E']] == 0:
-            registers[register_values['D']] = int(registers[register_values['D']])+1
-    elif data['dest_reg'] == 'H':
-        registers[register_values['L']] = int(registers[register_values['L']])+1
+            registers[register_values['D']] = int(registers[register_values['D']]) + 1
+    elif data['operand1'] == 'H':
+        registers[register_values['L']] = int(registers[register_values['L']]) + 1
         if registers[register_values['L']] == 0:
-            registers[register_values['H']] = int(registers[register_values['H']])+1
+            registers[register_values['H']] = int(registers[register_values['H']]) + 1
 
 
 def dcx(data):
-    if data['dest_reg'] == 'B':
-        registers[register_values['C']] = int(registers[register_values['C']])-1
+    if data['operand1'] == 'B':
+        registers[register_values['C']] = int(registers[register_values['C']]) - 1
         if registers[register_values['C']] == 0:
-            registers[register_values['B']] = int(registers[register_values['B']])-1
-    elif data['dest_reg'] == 'D':
-        registers[register_values['E']] = int(registers[register_values['E']])-1
+            registers[register_values['B']] = int(registers[register_values['B']]) - 1
+    elif data['operand1'] == 'D':
+        registers[register_values['E']] = int(registers[register_values['E']]) - 1
         if registers[register_values['E']] == 0:
-            registers[register_values['D']] = int(registers[register_values['D']])-1
-    elif data['dest_reg'] == 'H':
-        registers[register_values['L']] = int(registers[register_values['L']])-1
+            registers[register_values['D']] = int(registers[register_values['D']]) - 1
+    elif data['operand1'] == 'H':
+        registers[register_values['L']] = int(registers[register_values['L']]) - 1
         if registers[register_values['L']] == 0:
             registers[register_values['H']] -= 1
 
 
 def dad(data):
-    if data['dest_reg'] == 'B':
+    if data['operand1'] == 'B':
         registers[register_values['C']] += registers[register_values['E']]
         if registers[register_values['C']] > 255:
             registers[register_values['C']] -= 256
             registers[register_values['B']] += 1
-    elif data['dest_reg'] == 'D':
+    elif data['operand1'] == 'D':
         registers[register_values['E']] += registers[register_values['L']]
         if registers[register_values['E']] > 255:
             registers[register_values['E']] -= 256
             registers[register_values['D']] += 1
-    elif data['dest_reg'] == 'H':
+    elif data['operand1'] == 'H':
         registers[register_values['L']] += registers[register_values['B']]
         if registers[register_values['L']] > 255:
             registers[register_values['L']] -= 256
@@ -191,9 +202,9 @@ def sui(data):
 
 
 def cmp(data):
-    if registers[register_values['A']] == registers[register_values[data['src_reg']]]:
+    if registers[register_values['A']] == registers[register_values[data['operand2']]]:
         flags[flag_values['Z']] = 1
-    elif registers[register_values['A']] > registers[register_values[data['src_reg']]]:
+    elif registers[register_values['A']] > registers[register_values[data['operand2']]]:
         flags[flag_values['C']] = 1
 
 
@@ -205,12 +216,9 @@ def cma(data):
 
 
 def out(data):
-    print("OUT: ", data['address'], " - ",  memory[data['address']])
-
+    print("OUT: ", data['address'], " - ", memory[data['address']])
 
 
 def set(data):
     print("SET: ", data['address'], data['value'])
     memory[int(data['address'])] = data['value']
-
-

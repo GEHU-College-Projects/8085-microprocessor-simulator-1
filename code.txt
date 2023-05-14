@@ -1,7 +1,3 @@
-MVI B, 0
-MVI C, 8
-INR B
-DCR C
-jnz : 2004
-set 3030, 40
-out 3030
+mvi a, 20
+mov b, a
+lxi b, 3030

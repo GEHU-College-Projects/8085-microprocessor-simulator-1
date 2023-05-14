@@ -30,9 +30,9 @@ class Simulator:
             'inx': inx,
             'dcx': dcx,
             'dad': dad,
-            # 'sui': sui,
-            # 'cma': cma,
-            # 'cmp': cmp,
+            'sui': sui,
+            'cma': cma,
+            'cmp': cmp,
             # 'set': set,
             # 'out': out,
         }

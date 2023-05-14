@@ -1,3 +1,3 @@
 lxi d, 4060
-lxi h, 3020
-dad h
+lxi h, 3090
+dad d

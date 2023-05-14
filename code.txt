@@ -1,3 +1,3 @@
-mvi a, 20
-mov b, a
-lxi b, 3030
+lxi d, 4060
+lxi h, 3020
+dad h

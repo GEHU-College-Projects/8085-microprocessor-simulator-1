@@ -16,20 +16,20 @@ class Simulator:
             'mov': mov,
             'mvi': mvi,
             'lxi': lxi,
-            # 'lda': lda,
-            # 'sta': sta,
-            # 'lhld': lhld,
-            # 'shld': shld,
-            # 'stax': stax,
-            # 'xchg': xchg,
-            # 'add': add,
-            # 'adi': adi,
-            # 'sub': sub,
-            # 'inr': inr,
-            # 'dcr': dcr,
-            # 'inx': inx,
-            # 'dcx': dcx,
-            # 'dad': dad,
+            'lda': lda,
+            'sta': sta,
+            'lhld': lhld,
+            'shld': shld,
+            'stax': stax,
+            'xchg': xchg,
+            'add': add,
+            'adi': adi,
+            'sub': sub,
+            'inr': inr,
+            'dcr': dcr,
+            'inx': inx,
+            'dcx': dcx,
+            'dad': dad,
             # 'sui': sui,
             # 'cma': cma,
             # 'cmp': cmp,
@@ -44,7 +44,7 @@ class Simulator:
             self.opcode = code_list[0]
         elif len(code_list) == 2:
             self.opcode = code_list[0].upper()
-            if self.opcode in ['LXI', 'INX', 'DCX', 'DAD']:
+            if self.opcode in ['LXI', 'INX', 'DCX', 'DAD', 'STAX']:
                 if code_list[1] in self.register_pairs:
                     self.register1, self.register2 = self.register_pairs[code_list[1]]
             self.operand1 = code_list[1] if code_list[1].isalpha() else None
@@ -62,6 +62,9 @@ class Simulator:
                 self.operand1, self.value = code_list[1][:-1], code_list[2]
             elif code_list[2].isdigit() and len(code_list[2]) == 4:
                 self.operand1, self.address = code_list[1][:-1], code_list[2]
+                if self.operand1 in self.register_pairs:
+                    self.register1, self.register2 = self.register_pairs[self.operand1]
+
             elif code_list[2].isalpha():
                 self.operand1, self.operand2 = code_list[1][:-1], code_list[2]
 
@@ -89,22 +92,21 @@ class Simulator:
         self.label = None
 
     def run_instruction(self, data):
-        print(data['opcode'])
         if data['opcode'].lower() in self.function_dict:
-            print("Valid Instruction")
             self.function_dict[data['opcode'].lower()](data)
         else:
             print("Invalid Instruction")
 
     def execute(self, start_address, last_address):
         print(start_address, last_address)
-        while start_address < last_address:
+        while start_address <= last_address:
             # self.decode(memory[self.pc])
             self.decode(memory[start_address])
             start_address += count_bytes(memory[start_address])
 
     # read_code_lines -> execute -> decode -> run_instruction
     def read_code_lines(self):
+        self.set_memory()
         self.pc = 2000
         initial_address = self.pc
         last_address = self.pc
@@ -114,10 +116,17 @@ class Simulator:
                 # store the instruction in memory
                 memory[self.pc] = instruction[:-1].upper() if instruction[
                                                                   -1] == '\n' else instruction.upper()
-                last_address=self.pc
+                last_address = self.pc
                 self.pc += count_bytes(opcode)
         self.execute(initial_address, last_address)
         print_values()
+
+    def set_memory(self):
+        with open("setmemory.txt", 'r') as file:
+            for instruction in file:
+                address = instruction.split()[0]
+                value = instruction.split()[1]
+                memory[int(address)] = value
 
 
 if __name__ == "__main__":

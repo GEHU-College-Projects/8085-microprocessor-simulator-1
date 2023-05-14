@@ -1,3 +1,5 @@
-mvi a, 10
-mvi b, 30
-add b
+mvi a, FF
+mvi b, FF
+mvi c, 30
+add c
+inr c

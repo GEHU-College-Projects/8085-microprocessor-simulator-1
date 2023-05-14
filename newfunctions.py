@@ -36,7 +36,7 @@ def print_values():
         print(f"{reg:<5} {value:<6}")
     print()
 
-# set the flags where needed
+# set flags where needed
 
 def mov(data):
     registers[data['operand1']] = registers[data['operand2']]
@@ -66,6 +66,7 @@ def lhld(data):
     try:
         registers['L'] = memory[data['address']]
         registers['H'] = memory[data['address'] + 1]
+
     except KeyError:
         print(f"Memory address {data['address']} not found")
 
@@ -86,27 +87,34 @@ def xchg(data):
 
 
 def add(data):
-    registers['A'] += registers[data['operand1']]
+    a = int(registers['A'], 16) + int(registers[data['operand1']], 16)
+    registers['A'] =  hex(a)
+
 
 
 def adi(data):
-    registers['A'] += data['value']
+    a = int(registers['A'], 16) + int(data['value'], 16)
+    registers['A'] = hex(a)
 
 
 def sub(data):
-    registers['A'] -= registers[data['operand1']]
+    a = int(registers['A'], 16) - int(registers[data['operand1']], 16)
+    registers['A'] = hex(a)
 
 
 def sui(data):
-    registers['A'] -= data['value']
+    a = int(registers['A'], 16) - int(data['value'], 16)
+    registers['A'] = hex(a)
 
 
 def inr(data):
-    registers[data['operand1']] += 1
+    a = int(str(registers[data['operand1']]), 16) + 1
+    registers[data['operand1']] = a
 
 
 def dcr(data):
-    registers[data['operand1']] -= 1
+    a = int(registers[str(data['operand1'])], 16) - 1
+    registers[data['operand1']] = a
 
 
 def inx(data):

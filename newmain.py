@@ -74,7 +74,7 @@ class Simulator:
             'operand2': self.operand2,
             'register1': self.register1,
             'register2': self.register2,
-            'value': int(self.value) if self.value else None,
+            'value': hex(int(self.value)) if self.value else None,
             'address': int(self.address) if self.address else None,
             'label': int(self.label) if self.label else None,
         }

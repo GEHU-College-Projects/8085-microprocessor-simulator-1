@@ -1,5 +1,5 @@
 from newfunctions import *
-
+import sys
 
 class Simulator:
     def __init__(self):
@@ -12,6 +12,7 @@ class Simulator:
         self.value = None
         self.address = None
         self.label = None
+        self.last_used_register = None
         self.function_dict = {
             'mov': mov,
             'mvi': mvi,
@@ -33,8 +34,10 @@ class Simulator:
             'sui': sui,
             'cma': cma,
             'cmp': cmp,
-            # 'set': set,
-            # 'out': out,
+            'jnz': jnz,
+            'set': set,
+            'out': out,
+            'jnc' : jnc,
         }
         self.register_pairs = {'B': ('B', 'C'), 'D': ('D', 'E'), 'H': ('H', 'L')}
 
@@ -58,7 +61,7 @@ class Simulator:
             elif code_list[1].isdigit() and len(code_list[1]) == 4:
                 self.address = code_list[1]
                 self.value = code_list[2]
-            elif code_list[2].isdigit() and len(code_list[2]) == 2:
+            elif code_list[2] and len(code_list[2]) == 2:
                 self.operand1, self.value = code_list[1][:-1], code_list[2]
             elif code_list[2].isdigit() and len(code_list[2]) == 4:
                 self.operand1, self.address = code_list[1][:-1], code_list[2]
@@ -68,16 +71,24 @@ class Simulator:
             elif code_list[2].isalpha():
                 self.operand1, self.operand2 = code_list[1][:-1], code_list[2]
 
+
         data = {
             'opcode': self.opcode,
             'operand1': self.operand1,
             'operand2': self.operand2,
             'register1': self.register1,
             'register2': self.register2,
-            'value': hex(int(self.value)) if self.value else None,
+            'value': hex(int(self.value, 16)) if self.value else None,
             'address': int(self.address) if self.address else None,
             'label': int(self.label) if self.label else None,
+            'last_used_register': self.last_used_register if self.last_used_register=='M' or self.last_used_register else 'A'
+
         }
+
+        # setting last used register for jump commands
+        if self.operand1 and self.operand1!="M":
+            print("setting last used register", self.operand1)
+            self.last_used_register = self.operand1
         self.run_instruction(data)
         self.reset_values()
 
@@ -91,15 +102,33 @@ class Simulator:
         self.address = None
         self.label = None
 
+    def set_flags(self, value):
+        if value == 0:
+            flags['Z'] = 1
+        elif value < 0:
+            flags['S'] = 1
+        elif value > 0:
+            flags['S'] = 0
+            flags['Z'] = 0
+
     def run_instruction(self, data):
         opcode = data['opcode'].lower()
         if opcode in self.function_dict:
             if opcode not in ['jc', 'jnc', 'jz', 'jnz', 'jmp']:
                 self.function_dict[opcode](data)
             elif opcode in ['jc', 'jnc', 'jz', 'jnz', 'jmp']:
-                if flags['carry'] and opcode == 'jc':
-                    self.pc = data['address']
-
+                # set flags for last used register
+                self.set_flags(int(str(registers[data['last_used_register']]), 16))
+                if flags['Z'] == 0 and opcode == 'jnz':
+                    address = data['address']
+                    self.execute(address, last_address)
+                elif flags['CY']==0 and opcode == 'jnc':
+                    address = data['address']
+                    self.execute(address, last_address)
+                    if address == last_address:
+                        sys.exit()
+                else :
+                     print(data)
         else:
             print("Invalid Instruction")
 
@@ -110,11 +139,14 @@ class Simulator:
             self.decode(memory[start_address])
             start_address += count_bytes(memory[start_address])
 
+
+
+
     # read_code_lines -> execute -> decode -> run_instruction
     def read_code_lines(self):
         self.set_memory()
         self.pc = 2000
-        global  last_address
+        global last_address
         initial_address = self.pc
         last_address = self.pc
         with open("code.txt", 'r') as file:
@@ -127,6 +159,7 @@ class Simulator:
                 self.pc += count_bytes(opcode)
         self.execute(initial_address, last_address)
         print_values()
+
 
     def set_memory(self):
         with open("setmemory.txt", 'r') as file:

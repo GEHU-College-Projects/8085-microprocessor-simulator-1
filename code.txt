@@ -1,5 +1,5 @@
-mvi a, FF
-mvi b, FF
-mvi c, 30
-add c
-inr c
+mvi a, ff
+mvi b, ff
+jnc : 2007
+out 1001
+out 1002

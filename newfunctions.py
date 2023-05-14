@@ -16,7 +16,7 @@ def count_bytes(opcode):
     byte_counts = {'LXI': 3, 'STA': 3, 'LDA': 3, 'SHLD': 3, 'LHLD': 3, 'JMP': 3, 'JC': 3, 'JNC': 3, 'JP': 3, 'JM': 3,
                    'JZ': 3, 'JNZ': 3, 'MOV': 1, 'ADD': 1, 'ADC': 1, 'SUB': 1, 'SBB': 1, 'ANA': 1, 'ORA': 1, 'XRA': 1,
                    'CMP': 1, 'ADI': 2, 'ACI': 2, 'SUI': 2, 'SBI': 2, 'ANI': 2, 'ORI': 2, 'XRI': 2, 'CPI': 2, 'PUSH': 1,
-                   'POP': 1, 'INR': 1, 'DCR': 1, 'INX': 1, 'DCX': 1, 'MVI': 2, 'OUT': 2, 'STAX': 1, 'XCHG': 1, 'DAD': 1}
+                   'POP': 1, 'INR': 1, 'DCR': 1, 'INX': 1, 'DCX': 1, 'MVI': 2, 'OUT': 2, 'STAX': 1, 'XCHG': 1, 'DAD': 1, 'OUT':1}
     return byte_counts.get(opcode, 0)
 
 
@@ -36,10 +36,15 @@ def print_values():
         print(f"{reg:<5} {value:<6}")
     print()
 
+
 # set flags where needed
 
 def mov(data):
-    registers[data['operand1']] = registers[data['operand2']]
+    if data['operand2'] == 'M':
+        address = str(registers['H']) + str(registers['L'])
+        registers[data['operand1']] = memory[int(address)]
+    else:
+        registers[data['operand1']] = registers[data['operand2']]
 
 
 def mvi(data):
@@ -87,9 +92,16 @@ def xchg(data):
 
 
 def add(data):
-    a = int(registers['A'], 16) + int(registers[data['operand1']], 16)
-    registers['A'] =  hex(a)
-
+    if data['operand1'] == 'M':
+        address = str(registers['H']) + str(registers['L'])
+        print(address)
+        a = int(memory[int(address)]) + int(str(registers['A']), 16)
+    else:
+        a = int(registers['A'], 16) + int(registers[data['operand1']], 16)
+    registers['A'] = hex(a)
+    if a > 255:
+        flags['CY'] = 1
+        registers['A'] = hex(a - 256)
 
 
 def adi(data):
@@ -113,13 +125,15 @@ def inr(data):
 
 
 def dcr(data):
-    a = int(registers[str(data['operand1'])], 16) - 1
+    a = int(str(registers[data['operand1']]), 16) - 1
     registers[data['operand1']] = a
 
 
 def inx(data):
-    registers[data['register2']] = str(int(registers[data['register2']]) + 1)
-    registers[data['register1']] = str(int(registers[data['register1']]) + 1)
+    print(registers[data['register2']], registers[data['register1']], "dfsdffsdf")
+    x = str(int(registers[data['register2']]) + 1)
+    registers[data['register2']] = '{:02d}'.format(int(x))
+    # registers[data['register1']] = str(int(registers[data['register1']]) + 1)
 
 
 def dcx(data):
@@ -153,7 +167,16 @@ def sui(data):
     registers['A'] -= data['value']
 
 
-def jmp(data):
+def set(data):
+    memory[data['address']] = data['value']
+
+def out(data):
+    print("OUT: ", data['address'], memory[data['address']])
+
+def jnz(data):
+    return data['address']
+
+def jnc(data):
     return data['address']
 
 def jc(data):
@@ -161,4 +184,16 @@ def jc(data):
         return data['address']
 
 
-
+# mvi b, 05
+# mvi d, 00
+# lxi h, 1000
+# mvi a 00
+# add m
+# jnc : 2014
+# inr d
+# inx h
+# dcr b
+# jnz : 2009
+# sta 3000
+# mov a, d
+# sta 3001

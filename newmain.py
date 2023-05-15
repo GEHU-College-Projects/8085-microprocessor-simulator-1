@@ -170,7 +170,15 @@ class Simulator:
                 value = instruction.split()[1]
                 memory[int(address)] = value
 
-
+    def saveData(self,code):
+        with open ("code.txt", 'w') as file:
+            for line in code:
+                if line[-1] != '\n':
+                    file.write(line)
+        self.read_code_lines()
+        
+                  
+            
 if __name__ == "__main__":
     simulator = Simulator()
     simulator.read_code_lines()

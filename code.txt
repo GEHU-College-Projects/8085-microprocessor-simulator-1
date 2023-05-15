@@ -1,9 +1,1 @@
-mvi c, 05
-mvi a, 00
-lxi h, 1000
-mov b, m
-add b
-inx h
-dcr c
-jnz : 2007
-out 1004
+mvi a, 10 mov b, aadd a 
